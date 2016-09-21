@@ -48,7 +48,7 @@ function flatToSharp(note) {
 }
 
 function getNearestSample(sampleBank, note, octave) {
-  let sortedBank = sampleBank.slice().sort((sampleA. sampleB) => {
+  let sortedBank = sampleBank.slice().sort((sampleA, sampleB) => {
     let distanceToA = 
       Math.abs(getNoteDistance(note,octace, sampleA.note, sampleA.octave));
     let distanceToB = 
@@ -56,16 +56,24 @@ function getNearestSample(sampleBank, note, octave) {
     return distanceToA - distanceToB;
   });
   return sortedBank[0];
-
+}
 
 function fetchSample(path) {
-  retun fetch(encodeURIComponent(path))
+  return fetch(encodeURIComponent(path))
     .then(response => response.arrayBuffer())
-    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer));h
+    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer));
 }
 
 function getSample(instrument, noteAndOctave) {
   let [, requestedNote, requestedOctace] = /^(\w[b#]?)(\d)$/.exec(noteAndOctave);
   requestedOctave = parseInt(requestedOctave, 10);
   requestedNote = flatToSharp(requestedNote);
+  let sampleBank = SAMPLE_LIBRARY[instrument];
+  let sample = getNearestSample(sampleBank, requestedNote, requestedOctave);
+  let distance = 
+    getNoteDistance(requestedNote, requestedOctave, sample.note, sample.octave);
+  return fetchSample(sample.file).then(audioBuffer => ({
+    audioBuffer: audioBuffer,
+    distance: distance
+  }));
 }
